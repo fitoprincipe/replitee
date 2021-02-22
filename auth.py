@@ -1,46 +1,36 @@
 import os
 import ee
-import oauth2client
-from ee import oauth
 
 
-def get_token():
-    token = os.getenv("EE_TOKEN")
-    # print(token)
-    tokenEE = ee.oauth.request_token(token)
-    """
-    if token:
-      tokenEE = oauth2client.client.OAuth2Credentials(
-        None, 
-        oauth.CLIENT_ID, 
-        oauth.CLIENT_SECRET, 
-        token,
-        None, 
-        'https://accounts.google.com/o/oauth2/token', 
-        None
-      )
-    else:
-      tokenEE = None
-    """
-
-    return tokenEE
+def Initialize():
+  credentials = get_persistent_credentials()
+  ee.Initialize(credentials=credentials)
 
 
-def initialize():
-    token = get_token()
-    print(token)
+def get_persistent_credentials():
+  """Read persistent credentials from ~/.config/earthengine.
 
-    if token:
-        ee.Initialize(token)
-    else:
-        url = ee.oauth.get_authorization_url()
-        print("""
-    Open 
+  Raises EEException with helpful explanation if credentials don't exist.
 
-    {} 
+  Returns:
+    OAuth2Credentials built from persistently stored refresh_token
+  """
+  from google.oauth2.credentials import Credentials
+  from ee.data import ee_exception
 
-    in a brower tab and copy the code. Then create a file in this repository called '.env' (don't forget the leading dot). Inside that file write:
-
-    EE_TOKEN=THE_CODE_YOU_JUST_COPIED
-
-    """.format(url))
+  try:
+    # tokens = json.load(open(oauth.get_credentials_path()))
+    # refresh_token = tokens['refresh_token']
+    refresh_token = os.getenv("refresh_token")
+    return Credentials(
+        None,
+        refresh_token=refresh_token,
+        token_uri=ee.oauth.TOKEN_URI,
+        client_id=ee.oauth.CLIENT_ID,
+        client_secret=ee.oauth.CLIENT_SECRET,
+        scopes=ee.oauth.SCOPES)
+  except IOError:
+    raise ee_exception.EEException(
+        'Please authorize access to your Earth Engine account by '
+        'running\n\nearthengine authenticate\n\nin your command line, and then '
+        'retry.')

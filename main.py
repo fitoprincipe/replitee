@@ -1,5 +1,5 @@
 import ee
-from auth import initialize
-initialize()
+from auth import Initialize
+Initialize()
 
 print(ee.Image(0).getInfo())
